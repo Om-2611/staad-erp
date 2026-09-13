@@ -23,15 +23,23 @@ export default async function ViewerIndividualPage({
   const from = params.from || defaultFrom;
   const to = params.to || defaultTo;
 
+  // Include interns, plus any admin who's also been granted intern-portal
+  // access (e.g. a co-founder tracking their own attendance/work) — their
+  // profile and work should be visible to leadership the same way.
   const internBaseQuery = supabase
     .from("profiles")
     .select(
       "id, name, email, roll_number, year, branch, section, spf_band, cdc_band, backlog, teams!team_id(name)"
     )
-    .eq("role", "intern")
+    .or("role.eq.intern,and(role.eq.admin,has_intern_access.eq.true)")
     .order("name");
+  // A scoped viewer is restricted to their assigned teams, but an org-wide
+  // account (null team_id — e.g. an unassigned admin) stays visible to
+  // everyone, matching how the RLS policy itself treats a null team_id.
   const { data: internsRaw } = teamIds
-    ? await internBaseQuery.in("team_id", teamIds.length ? teamIds : ["00000000-0000-0000-0000-000000000000"])
+    ? await internBaseQuery.or(
+        `team_id.in.(${teamIds.length ? teamIds.join(",") : "00000000-0000-0000-0000-000000000000"}),team_id.is.null`
+      )
     : await internBaseQuery;
   const interns: any[] = internsRaw ?? [];
 

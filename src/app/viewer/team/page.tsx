@@ -35,11 +35,13 @@ export default async function ViewerTeamPage({
   let worklogs: any[] = [];
 
   if (selectedTeamId) {
+    // Team roster includes interns, plus any admin with intern-portal access
+    // who's on this team (e.g. a co-founder tracking their own work here).
     const { data: m } = await supabase
       .from("profiles")
       .select("id, name")
       .eq("team_id", selectedTeamId)
-      .eq("role", "intern");
+      .or("role.eq.intern,and(role.eq.admin,has_intern_access.eq.true)");
     members = m ?? [];
     const memberIds = members.map((m) => m.id);
 
