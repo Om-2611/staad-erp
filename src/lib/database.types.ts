@@ -9,6 +9,8 @@ export type WorkLogStatus = "pending" | "approved" | "rejected";
 export type AnnouncementVisibility = "all" | "interns" | "viewers" | "team";
 export type ViewerScope = "all" | "team";
 export type AccountStatus = "active" | "inactive";
+export type Band = "A" | "B" | "C" | "D";
+export type TaskFrequency = "daily" | "weekly" | "monthly";
 
 export interface Database {
   public: {
@@ -40,6 +42,13 @@ export interface Database {
           joined_date: string;
           viewer_scope: ViewerScope;
           created_at: string;
+          roll_number: string | null;
+          year: string | null;
+          spf_band: Band | null;
+          cdc_band: Band | null;
+          branch: string | null;
+          section: string | null;
+          backlog: string | null;
         };
         Insert: {
           id: string;
@@ -51,6 +60,13 @@ export interface Database {
           joined_date?: string;
           viewer_scope?: ViewerScope;
           created_at?: string;
+          roll_number?: string | null;
+          year?: string | null;
+          spf_band?: Band | null;
+          cdc_band?: Band | null;
+          branch?: string | null;
+          section?: string | null;
+          backlog?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
         Relationships: [];
@@ -147,6 +163,34 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["announcements"]["Insert"]>;
         Relationships: [];
       };
+      tasks: {
+        Row: {
+          id: string;
+          title: string;
+          description: string | null;
+          frequency: TaskFrequency;
+          team_id: string | null;
+          assigned_to: string | null;
+          created_by: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          description?: string | null;
+          frequency: TaskFrequency;
+          team_id?: string | null;
+          assigned_to?: string | null;
+          created_by?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["tasks"]["Insert"]>;
+        Relationships: [];
+      };
       audit_log: {
         Row: {
           id: string;
@@ -181,3 +225,4 @@ export type Attendance = Database["public"]["Tables"]["attendance"]["Row"];
 export type WorkLog = Database["public"]["Tables"]["worklogs"]["Row"];
 export type Announcement = Database["public"]["Tables"]["announcements"]["Row"];
 export type AuditLogEntry = Database["public"]["Tables"]["audit_log"]["Row"];
+export type Task = Database["public"]["Tables"]["tasks"]["Row"];

@@ -14,6 +14,7 @@ import {
   Eye,
   User,
   Flag,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react";
 import type { Role } from "@/lib/database.types";
@@ -37,6 +38,7 @@ const NAV: Record<Role, NavLink[]> = {
   admin: [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/approvals", label: "Approvals", icon: ClipboardCheck },
+    { href: "/admin/tasks", label: "Tasks", icon: ClipboardList },
     { href: "/admin/interns", label: "Interns", icon: Users },
     { href: "/admin/teams", label: "Teams", icon: Layers },
     { href: "/admin/attendance", label: "Attendance", icon: CalendarCheck },
@@ -48,6 +50,7 @@ const NAV: Record<Role, NavLink[]> = {
     { href: "/viewer/individual", label: "Individual", icon: User },
     { href: "/viewer/team", label: "By Team", icon: Users },
     { href: "/viewer/milestones", label: "Milestones", icon: Flag },
+    { href: "/viewer/tasks", label: "Tasks", icon: ClipboardList },
   ],
 };
 

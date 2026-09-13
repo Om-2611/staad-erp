@@ -13,6 +13,7 @@ import type {
   AttendanceStatus,
   AnnouncementVisibility,
   ViewerScope,
+  TaskFrequency,
 } from "@/lib/database.types";
 
 function fail(path: string, message: string): never {
@@ -388,4 +389,74 @@ export async function createViewer(
 
   revalidatePath("/admin/viewers");
   return { success: true, email, tempPassword };
+}
+
+// ----------------------------------------------------------------------------
+// Tasks (day-to-day / weekly / monthly assignments)
+// ----------------------------------------------------------------------------
+export async function createTask(formData: FormData) {
+  const profile = await requireRole("admin");
+  const supabase = await createClient();
+
+  const title = String(formData.get("title") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim() || null;
+  const frequency = String(formData.get("frequency") ?? "daily") as TaskFrequency;
+  const target = String(formData.get("target") ?? "all"); // "all" | "team" | "intern"
+  const targetTeamId = String(formData.get("target_team_id") ?? "") || null;
+  const targetInternId = String(formData.get("target_intern_id") ?? "") || null;
+
+  if (!title) fail("/admin/tasks", "Title is required.");
+
+  let teamId: string | null = null;
+  let assignedTo: string | null = null;
+
+  if (target === "team") {
+    if (!targetTeamId) fail("/admin/tasks", "Pick a team to assign this task to.");
+    teamId = targetTeamId;
+  } else if (target === "intern") {
+    if (!targetInternId) fail("/admin/tasks", "Pick an intern to assign this task to.");
+    assignedTo = targetInternId;
+    const { data: intern } = await supabase.from("profiles").select("team_id").eq("id", targetInternId).single();
+    teamId = intern?.team_id ?? null;
+  }
+
+  const { error } = await supabase.from("tasks").insert({
+    title,
+    description,
+    frequency,
+    team_id: teamId,
+    assigned_to: assignedTo,
+    created_by: profile.id,
+  });
+
+  if (error) fail("/admin/tasks", "Could not create task.");
+
+  revalidatePath("/admin/tasks");
+  revalidatePath("/intern/dashboard");
+  revalidatePath("/viewer/tasks");
+}
+
+export async function setTaskActive(formData: FormData) {
+  await requireRole("admin");
+  const supabase = await createClient();
+  const id = String(formData.get("id") ?? "");
+  const isActive = formData.get("is_active") === "true";
+
+  const { error } = await supabase.from("tasks").update({ is_active: isActive }).eq("id", id);
+  if (error) fail("/admin/tasks", "Could not update task.");
+
+  revalidatePath("/admin/tasks");
+  revalidatePath("/intern/dashboard");
+  revalidatePath("/viewer/tasks");
+}
+
+export async function deleteTask(formData: FormData) {
+  await requireRole("admin");
+  const supabase = await createClient();
+  const id = String(formData.get("id") ?? "");
+
+  await supabase.from("tasks").delete().eq("id", id);
+  revalidatePath("/admin/tasks");
+  revalidatePath("/intern/dashboard");
+  revalidatePath("/viewer/tasks");
 }

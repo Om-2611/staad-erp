@@ -1,13 +1,15 @@
 import Link from "next/link";
-import { CalendarCheck, ListChecks, Megaphone, Clock, ArrowRight } from "lucide-react";
+import { CalendarCheck, ListChecks, Megaphone, Clock, ArrowRight, ClipboardList } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { todayISO, formatDateTime, currentMonthRange } from "@/lib/dates";
 import { Alert } from "@/components/ui/PageHeader";
 import { StatCard, Card } from "@/components/ui/Card";
-import { StatusBadge } from "@/components/ui/Badge";
+import { StatusBadge, Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { checkIn, checkOut, markDayStatus } from "@/app/intern/actions";
+
+const FREQUENCY_LABEL = { daily: "Day-to-day", weekly: "Weekly", monthly: "Monthly" } as const;
 
 export default async function InternDashboardPage({
   searchParams,
@@ -20,7 +22,7 @@ export default async function InternDashboardPage({
   const today = todayISO();
   const { start: monthStart, end: monthEnd } = currentMonthRange();
 
-  const [{ data: todayAttendance }, { data: monthAttendance }, { data: recentLogs }, { data: announcements }] =
+  const [{ data: todayAttendance }, { data: monthAttendance }, { data: recentLogs }, { data: announcements }, { data: tasks }] =
     await Promise.all([
       supabase.from("attendance").select("*").eq("user_id", profile.id).eq("date", today).maybeSingle(),
       supabase
@@ -40,6 +42,8 @@ export default async function InternDashboardPage({
         .select("*")
         .order("created_at", { ascending: false })
         .limit(3),
+      // RLS scopes this to: tasks assigned to me, to my team, or org-wide.
+      supabase.from("tasks").select("*").eq("is_active", true).order("frequency"),
     ]);
 
   const presentDays = (monthAttendance ?? []).filter((a) => a.status === "present").length;
@@ -152,6 +156,27 @@ export default async function InternDashboardPage({
           </Card>
         </div>
 
+        <div className="space-y-6">
+        <Card className="p-5">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+            <ClipboardList className="h-4 w-4 text-indigo-600" /> My Tasks
+          </h2>
+          <ul className="mt-3 space-y-2.5">
+            {(tasks ?? []).length === 0 && <li className="text-sm text-slate-500">No tasks assigned right now.</li>}
+            {(tasks ?? []).map((t) => (
+              <li key={t.id} className="rounded-lg border border-slate-100 p-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm text-slate-800">{t.title}</p>
+                  <Badge className="shrink-0 bg-indigo-50 text-indigo-700">
+                    {FREQUENCY_LABEL[t.frequency as keyof typeof FREQUENCY_LABEL]}
+                  </Badge>
+                </div>
+                {t.description && <p className="mt-1 text-xs text-slate-500">{t.description}</p>}
+              </li>
+            ))}
+          </ul>
+        </Card>
+
         <Card className="p-5">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
             <Megaphone className="h-4 w-4 text-amber-600" /> Announcements
@@ -168,6 +193,7 @@ export default async function InternDashboardPage({
             ))}
           </ul>
         </Card>
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { User, Mail, Shield, Layers, CalendarDays } from "lucide-react";
+import { User, Mail, Shield, Layers, CalendarDays, GraduationCap } from "lucide-react";
 import { requireActiveProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/dates";
@@ -8,6 +8,7 @@ import { Avatar, Badge } from "@/components/ui/Badge";
 import { PortalShell } from "@/components/nav/PortalShell";
 import { ProfileForm } from "@/app/settings/ProfileForm";
 import { PasswordForm } from "@/app/settings/PasswordForm";
+import { AcademicDetailsForm } from "@/app/settings/AcademicDetailsForm";
 
 const ROLE_LABEL = { admin: "Admin", intern: "Intern", viewer: "Leadership (View-only)" } as const;
 
@@ -64,6 +65,19 @@ export default async function SettingsPage() {
               </p>
             </CardBody>
           </Card>
+
+          {profile.role === "intern" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-1.5">
+                  <GraduationCap className="h-3.5 w-3.5 text-indigo-600" /> Academic details
+                </CardTitle>
+              </CardHeader>
+              <CardBody>
+                <AcademicDetailsForm profile={profile} />
+              </CardBody>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>

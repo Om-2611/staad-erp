@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Band } from "@/lib/database.types";
 
 export interface SettingsState {
   error?: string;
@@ -34,6 +35,57 @@ export async function updateOwnName(
 
   revalidatePath("/settings", "layout");
   return { success: "Name updated." };
+}
+
+const VALID_BANDS: Band[] = ["A", "B", "C", "D"];
+
+function emptyToNull(value: FormDataEntryValue | null): string | null {
+  const s = String(value ?? "").trim();
+  return s === "" ? null : s;
+}
+
+/**
+ * Lets an intern fill in their own academic details — all optional, none of
+ * this is used anywhere for access control. Intern-only: admin and viewer
+ * profiles don't carry these fields in the UI.
+ */
+export async function updateAcademicDetails(
+  _prev: SettingsState,
+  formData: FormData
+): Promise<SettingsState> {
+  const profile = await getCurrentProfile();
+  if (!profile) return { error: "You must be signed in." };
+  if (profile.role !== "intern") return { error: "Only intern accounts have academic details." };
+
+  const rollNumber = emptyToNull(formData.get("roll_number"));
+  const year = emptyToNull(formData.get("year"));
+  const branch = emptyToNull(formData.get("branch"));
+  const section = emptyToNull(formData.get("section"));
+  const backlog = emptyToNull(formData.get("backlog"));
+  const spfBandRaw = emptyToNull(formData.get("spf_band"));
+  const cdcBandRaw = emptyToNull(formData.get("cdc_band"));
+
+  const spfBand = spfBandRaw && VALID_BANDS.includes(spfBandRaw as Band) ? (spfBandRaw as Band) : null;
+  const cdcBand = cdcBandRaw && VALID_BANDS.includes(cdcBandRaw as Band) ? (cdcBandRaw as Band) : null;
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("profiles")
+    .update({
+      roll_number: rollNumber,
+      year,
+      branch,
+      section,
+      backlog,
+      spf_band: spfBand,
+      cdc_band: cdcBand,
+    })
+    .eq("id", profile.id);
+
+  if (error) return { error: "Could not save academic details. Please try again." };
+
+  revalidatePath("/settings", "layout");
+  return { success: "Academic details saved." };
 }
 
 /**

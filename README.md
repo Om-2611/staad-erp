@@ -185,6 +185,20 @@ known size.
 
 ---
 
+## 7b. Academic details and tasks
+
+- **Academic details**: interns can optionally fill in roll number, year,
+  branch, section, SPF band, CDC band, and backlog from their own
+  **Profile Settings** (`/settings`) — none of these are required. Leadership
+  viewers see whatever's filled in when they open that intern's profile in
+  **Individual View**, and it's included in that view's PDF export.
+- **Tasks**: admin can assign day-to-day, weekly, or monthly tasks from
+  `/admin/tasks` — to everyone, a specific team, or one intern. Assigned
+  interns see their tasks on their dashboard; leadership sees all tasks
+  within their scope at `/viewer/tasks`, with its own PDF export.
+
+---
+
 ## 8. How approvals work
 
 1. An intern submits a work log from `/intern/submit` (or edits one from

@@ -4,7 +4,7 @@ import { getViewerTeamIds } from "@/lib/viewerScope";
 import { formatDate, currentMonthRange, minutesToLabel } from "@/lib/dates";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/Card";
-import { StatusBadge, Badge } from "@/components/ui/Badge";
+import { StatusBadge, Badge, Avatar } from "@/components/ui/Badge";
 import { Select, Input, Label } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "@/components/ui/Table";
@@ -25,7 +25,9 @@ export default async function ViewerIndividualPage({
 
   const internBaseQuery = supabase
     .from("profiles")
-    .select("id, name, email, teams!team_id(name)")
+    .select(
+      "id, name, email, roll_number, year, branch, section, spf_band, cdc_band, backlog, teams!team_id(name)"
+    )
     .eq("role", "intern")
     .order("name");
   const { data: internsRaw } = teamIds
@@ -63,6 +65,19 @@ export default async function ViewerIndividualPage({
   const presentDays = attendance.filter((a) => a.status === "present").length;
   const attendancePct = attendance.length ? Math.round((presentDays / attendance.length) * 100) : 0;
   const totalMinutes = worklogs.reduce((sum, w) => sum + (w.time_spent_minutes ?? 0), 0);
+
+  const academicFields: [string, string | null | undefined][] = selected
+    ? [
+        ["Roll number", selected.roll_number],
+        ["Year", selected.year],
+        ["Branch", selected.branch],
+        ["Section", selected.section],
+        ["SPF Band", selected.spf_band],
+        ["CDC Band", selected.cdc_band],
+        ["Backlog", selected.backlog],
+      ]
+    : [];
+  const setAcademicFields = academicFields.filter(([, v]) => v);
 
   return (
     <div>
@@ -103,6 +118,7 @@ export default async function ViewerIndividualPage({
               meta={[
                 `Team: ${selected.teams?.name ?? "Unassigned"}`,
                 `Range: ${formatDate(from)} – ${formatDate(to)}`,
+                ...setAcademicFields.map(([label, value]) => `${label}: ${value}`),
               ]}
               stats={[
                 { label: "Attendance", value: `${attendancePct}%` },
@@ -122,6 +138,28 @@ export default async function ViewerIndividualPage({
                 },
               ]}
             />
+          </div>
+
+          <div className="mb-6 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm shadow-slate-200/50">
+            <div className="flex items-center gap-3">
+              <Avatar name={selected.name} />
+              <div>
+                <p className="text-sm font-semibold text-slate-900">{selected.name}</p>
+                <p className="text-xs text-slate-500">
+                  {selected.email} · {selected.teams?.name ?? "Unassigned"}
+                </p>
+              </div>
+            </div>
+            {setAcademicFields.length > 0 && (
+              <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-slate-100 pt-3 sm:grid-cols-4">
+                {setAcademicFields.map(([label, value]) => (
+                  <div key={label}>
+                    <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">{label}</p>
+                    <p className="text-sm text-slate-700">{value}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
