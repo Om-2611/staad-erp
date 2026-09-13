@@ -28,6 +28,13 @@ interface NavLink {
 // Icon components must live inside this client component — a Server
 // Component (PortalShell) can't pass component/function references as props
 // to a Client Component, only serializable data or already-rendered JSX.
+const INTERN_SELF_SERVICE_NAV: NavLink[] = [
+  { href: "/intern/dashboard", label: "My Dashboard", icon: LayoutDashboard },
+  { href: "/intern/attendance", label: "My Attendance", icon: CalendarCheck },
+  { href: "/intern/worklogs", label: "My Work Logs", icon: ListChecks },
+  { href: "/intern/submit", label: "Submit Today", icon: SendHorizontal },
+];
+
 const NAV: Record<Role, NavLink[]> = {
   intern: [
     { href: "/intern/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -54,9 +61,10 @@ const NAV: Record<Role, NavLink[]> = {
   ],
 };
 
-export function NavLinks({ role }: { role: Role }) {
+export function NavLinks({ role, hasInternAccess = false }: { role: Role; hasInternAccess?: boolean }) {
   const pathname = usePathname();
   const links = NAV[role];
+  const showPersonalTools = role === "admin" && hasInternAccess;
 
   return (
     <nav className="flex flex-wrap items-center gap-1">
@@ -78,6 +86,30 @@ export function NavLinks({ role }: { role: Role }) {
           </Link>
         );
       })}
+
+      {showPersonalTools && (
+        <>
+          <span className="mx-1 h-4 w-px bg-slate-200" aria-hidden="true" />
+          {INTERN_SELF_SERVICE_NAV.map((link) => {
+            const active = pathname === link.href || pathname?.startsWith(link.href + "/");
+            const Icon = link.icon;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                  active
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
+                {link.label}
+              </Link>
+            );
+          })}
+        </>
+      )}
     </nav>
   );
 }

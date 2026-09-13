@@ -49,6 +49,7 @@ export interface Database {
           branch: string | null;
           section: string | null;
           backlog: string | null;
+          has_intern_access: boolean;
         };
         Insert: {
           id: string;
@@ -67,6 +68,7 @@ export interface Database {
           branch?: string | null;
           section?: string | null;
           backlog?: string | null;
+          has_intern_access?: boolean;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
         Relationships: [];

@@ -58,3 +58,27 @@ export async function requireActiveProfile(): Promise<Profile> {
 
   return profile;
 }
+
+/** True if this profile may use the intern self-service tools (attendance,
+ * work logs, tasks, academic details) — either because they *are* an intern,
+ * or because they're an admin who's also been granted that access (e.g. a
+ * co-founder who wants to track their own attendance/tasks too). */
+export function canUseInternPortal(profile: Pick<Profile, "role" | "has_intern_access">): boolean {
+  return profile.role === "intern" || (profile.role === "admin" && profile.has_intern_access);
+}
+
+/**
+ * Guard for the /intern/* portal and its server actions. Unlike
+ * requireRole("intern"), this also admits an admin with has_intern_access —
+ * everything downstream (attendance, worklogs, tasks) already scopes by
+ * profile.id, so it works the same for either.
+ */
+export async function requireInternPortalAccess(): Promise<Profile> {
+  const profile = await getCurrentProfile();
+
+  if (!profile) redirect("/login");
+  if (profile.status !== "active") redirect("/unauthorized");
+  if (!canUseInternPortal(profile)) redirect(ROLE_HOME[profile.role]);
+
+  return profile;
+}

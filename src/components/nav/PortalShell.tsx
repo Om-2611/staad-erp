@@ -38,7 +38,7 @@ export function PortalShell({
             </span>
           </div>
 
-          <NavLinks role={profile.role} />
+          <NavLinks role={profile.role} hasInternAccess={profile.has_intern_access} />
 
           <div className="flex items-center gap-2">
             <Link

@@ -65,7 +65,7 @@ export async function updateSession(request: NextRequest) {
   // Logged in — fetch role once per request (cheap, indexed PK lookup).
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, status")
+    .select("role, status, has_intern_access")
     .eq("id", user.id)
     .single();
 
@@ -86,9 +86,11 @@ export async function updateSession(request: NextRequest) {
   const wantsIntern = pathname.startsWith("/intern");
   const wantsViewer = pathname.startsWith("/viewer");
 
+  // An admin with has_intern_access (e.g. a co-founder who also tracks their
+  // own attendance/tasks) can reach /intern/* in addition to /admin/*.
   const allowed =
     (wantsAdmin && profile.role === "admin") ||
-    (wantsIntern && profile.role === "intern") ||
+    (wantsIntern && (profile.role === "intern" || (profile.role === "admin" && profile.has_intern_access))) ||
     (wantsViewer && profile.role === "viewer") ||
     (!wantsAdmin && !wantsIntern && !wantsViewer);
 

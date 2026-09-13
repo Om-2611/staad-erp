@@ -1,5 +1,5 @@
 import { User, Mail, Shield, Layers, CalendarDays, GraduationCap } from "lucide-react";
-import { requireActiveProfile } from "@/lib/auth";
+import { requireActiveProfile, canUseInternPortal } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/dates";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -66,7 +66,7 @@ export default async function SettingsPage() {
             </CardBody>
           </Card>
 
-          {profile.role === "intern" && (
+          {canUseInternPortal(profile) && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-1.5">

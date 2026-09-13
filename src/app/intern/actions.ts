@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { requireRole } from "@/lib/auth";
+import { requireInternPortalAccess } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { todayISO } from "@/lib/dates";
 import type { AttendanceStatus } from "@/lib/database.types";
@@ -13,7 +13,7 @@ function fail(path: string, message: string): never {
 
 /** Check in for today. One row per user per day (enforced by DB unique + RLS). */
 export async function checkIn() {
-  const profile = await requireRole("intern");
+  const profile = await requireInternPortalAccess();
   const supabase = await createClient();
 
   const { error } = await supabase.from("attendance").insert({
@@ -34,7 +34,7 @@ export async function checkIn() {
 
 /** Mark today as leave/absent instead of present (no check-in). */
 export async function markDayStatus(formData: FormData) {
-  const profile = await requireRole("intern");
+  const profile = await requireInternPortalAccess();
   const supabase = await createClient();
   const status = String(formData.get("status") ?? "leave") as AttendanceStatus;
   const notes = String(formData.get("notes") ?? "").trim() || null;
@@ -57,7 +57,7 @@ export async function markDayStatus(formData: FormData) {
 
 /** Record check-out time against today's existing attendance row. */
 export async function checkOut() {
-  const profile = await requireRole("intern");
+  const profile = await requireInternPortalAccess();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -75,7 +75,7 @@ export async function checkOut() {
 }
 
 export async function submitWorkLog(formData: FormData) {
-  const profile = await requireRole("intern");
+  const profile = await requireInternPortalAccess();
   const supabase = await createClient();
 
   const description = String(formData.get("description") ?? "").trim();
@@ -109,7 +109,7 @@ export async function submitWorkLog(formData: FormData) {
 
 /** Resubmit a rejected (or edit a still-pending) work log — resets status to pending. */
 export async function resubmitWorkLog(formData: FormData) {
-  const profile = await requireRole("intern");
+  const profile = await requireInternPortalAccess();
   const supabase = await createClient();
 
   const id = String(formData.get("id") ?? "");

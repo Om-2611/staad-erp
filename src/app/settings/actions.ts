@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getCurrentProfile } from "@/lib/auth";
+import { getCurrentProfile, canUseInternPortal } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Band } from "@/lib/database.types";
@@ -55,7 +55,7 @@ export async function updateAcademicDetails(
 ): Promise<SettingsState> {
   const profile = await getCurrentProfile();
   if (!profile) return { error: "You must be signed in." };
-  if (profile.role !== "intern") return { error: "Only intern accounts have academic details." };
+  if (!canUseInternPortal(profile)) return { error: "Academic details aren't available for this account." };
 
   const rollNumber = emptyToNull(formData.get("roll_number"));
   const year = emptyToNull(formData.get("year"));

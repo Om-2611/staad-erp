@@ -1,4 +1,4 @@
-import { requireRole } from "@/lib/auth";
+import { requireInternPortalAccess } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatTime } from "@/lib/dates";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -6,7 +6,7 @@ import { StatusBadge } from "@/components/ui/Badge";
 import { Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "@/components/ui/Table";
 
 export default async function InternAttendancePage() {
-  const profile = await requireRole("intern");
+  const profile = await requireInternPortalAccess();
   const supabase = await createClient();
 
   const { data: rows } = await supabase

@@ -1,4 +1,4 @@
-import { requireRole } from "@/lib/auth";
+import { requireInternPortalAccess } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, minutesToLabel } from "@/lib/dates";
 import { PageHeader, Alert } from "@/components/ui/PageHeader";
@@ -14,7 +14,7 @@ export default async function InternWorkLogsPage({
   searchParams: Promise<{ submitted?: string; resubmitted?: string; error?: string }>;
 }) {
   const params = await searchParams;
-  const profile = await requireRole("intern");
+  const profile = await requireInternPortalAccess();
   const supabase = await createClient();
 
   const { data: logs } = await supabase

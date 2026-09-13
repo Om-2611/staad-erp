@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CalendarCheck, ListChecks, Megaphone, Clock, ArrowRight, ClipboardList } from "lucide-react";
-import { requireRole } from "@/lib/auth";
+import { requireInternPortalAccess } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { todayISO, formatDateTime, currentMonthRange } from "@/lib/dates";
 import { Alert } from "@/components/ui/PageHeader";
@@ -17,7 +17,7 @@ export default async function InternDashboardPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
-  const profile = await requireRole("intern");
+  const profile = await requireInternPortalAccess();
   const supabase = await createClient();
   const today = todayISO();
   const { start: monthStart, end: monthEnd } = currentMonthRange();
