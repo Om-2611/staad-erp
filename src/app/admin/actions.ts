@@ -221,6 +221,35 @@ export async function deleteAccount(formData: FormData) {
   revalidatePath("/admin/dashboard");
 }
 
+export interface ResetPasswordResult {
+  success?: boolean;
+  password?: string;
+  error?: string;
+}
+
+/**
+ * Resets any account's password to a freshly generated one and returns it
+ * to the admin to hand over — called directly from a client component
+ * (server actions are callable as plain functions, not just via <form>),
+ * so the result can be shown inline instead of round-tripping through a
+ * redirect + query string (which would leak the password into browser
+ * history and server logs).
+ */
+export async function resetPassword(userId: string): Promise<ResetPasswordResult> {
+  await requireRole("admin");
+  if (!userId) return { error: "No account specified." };
+
+  const admin = createAdminClient();
+  const { data: target } = await admin.from("profiles").select("name").eq("id", userId).single();
+  if (!target) return { error: "Account not found." };
+
+  const newPassword = generateTempPassword();
+  const { error } = await admin.auth.admin.updateUserById(userId, { password: newPassword });
+  if (error) return { error: error.message || "Could not reset password." };
+
+  return { success: true, password: newPassword };
+}
+
 // ----------------------------------------------------------------------------
 // Teams
 // ----------------------------------------------------------------------------

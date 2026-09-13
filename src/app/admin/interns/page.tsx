@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Search, UsersRound } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -8,6 +9,7 @@ import { StatusBadge, Avatar, Badge } from "@/components/ui/Badge";
 import { Select, Input } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { ConfirmSubmitButton } from "@/components/ui/ConfirmSubmitButton";
+import { ResetPasswordButton } from "@/components/ui/ResetPasswordButton";
 import { Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "@/components/ui/Table";
 import { updateInternTeam, setAccountStatus, deleteAccount } from "@/app/admin/actions";
 import { CreateInternForm } from "@/app/admin/interns/CreateInternForm";
@@ -73,10 +75,13 @@ export default async function AdminInternsPage({
               {filtered.map((intern: any) => (
                 <Tr key={intern.id}>
                   <Td>
-                    <div className="flex items-center gap-2.5">
+                    <Link
+                      href={`/admin/interns/${intern.id}`}
+                      className="flex items-center gap-2.5 hover:underline"
+                    >
                       <Avatar name={intern.name} size="sm" />
                       <span className="font-medium text-slate-900">{intern.name}</span>
-                    </div>
+                    </Link>
                   </Td>
                   <Td>{intern.email}</Td>
                   <Td>
@@ -100,7 +105,8 @@ export default async function AdminInternsPage({
                     <StatusBadge status={intern.status} />
                   </Td>
                   <Td>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <ResetPasswordButton userId={intern.id} userName={intern.name} />
                       <form action={setAccountStatus}>
                         <input type="hidden" name="user_id" value={intern.id} />
                         <input type="hidden" name="status" value={intern.status === "active" ? "inactive" : "active"} />

@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardBody } from "@/components/ui/Card";
 import { StatusBadge, Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ConfirmSubmitButton } from "@/components/ui/ConfirmSubmitButton";
+import { ResetPasswordButton } from "@/components/ui/ResetPasswordButton";
 import { Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "@/components/ui/Table";
 import { setAccountStatus, deleteAccount } from "@/app/admin/actions";
 import { CreateViewerForm } from "@/app/admin/viewers/CreateViewerForm";
@@ -52,7 +53,8 @@ export default async function AdminViewersPage({
                     <StatusBadge status={v.status} />
                   </Td>
                   <Td>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <ResetPasswordButton userId={v.id} userName={v.name} />
                       <form action={setAccountStatus}>
                         <input type="hidden" name="user_id" value={v.id} />
                         <input type="hidden" name="status" value={v.status === "active" ? "inactive" : "active"} />
