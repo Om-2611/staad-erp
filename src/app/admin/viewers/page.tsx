@@ -4,8 +4,9 @@ import { PageHeader, Alert } from "@/components/ui/PageHeader";
 import { Card, CardHeader, CardTitle, CardBody } from "@/components/ui/Card";
 import { StatusBadge, Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ConfirmSubmitButton } from "@/components/ui/ConfirmSubmitButton";
 import { Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "@/components/ui/Table";
-import { setAccountStatus } from "@/app/admin/actions";
+import { setAccountStatus, deleteAccount } from "@/app/admin/actions";
 import { CreateViewerForm } from "@/app/admin/viewers/CreateViewerForm";
 
 export default async function AdminViewersPage({
@@ -51,13 +52,27 @@ export default async function AdminViewersPage({
                     <StatusBadge status={v.status} />
                   </Td>
                   <Td>
-                    <form action={setAccountStatus}>
-                      <input type="hidden" name="user_id" value={v.id} />
-                      <input type="hidden" name="status" value={v.status === "active" ? "inactive" : "active"} />
-                      <Button type="submit" size="sm" variant={v.status === "active" ? "danger" : "secondary"}>
-                        {v.status === "active" ? "Deactivate" : "Reactivate"}
-                      </Button>
-                    </form>
+                    <div className="flex items-center gap-1.5">
+                      <form action={setAccountStatus}>
+                        <input type="hidden" name="user_id" value={v.id} />
+                        <input type="hidden" name="status" value={v.status === "active" ? "inactive" : "active"} />
+                        <Button type="submit" size="sm" variant={v.status === "active" ? "danger" : "secondary"}>
+                          {v.status === "active" ? "Deactivate" : "Reactivate"}
+                        </Button>
+                      </form>
+                      <form action={deleteAccount}>
+                        <input type="hidden" name="user_id" value={v.id} />
+                        <input type="hidden" name="redirect_path" value="/admin/viewers" />
+                        <ConfirmSubmitButton
+                          size="sm"
+                          variant="ghost"
+                          confirmMessage={`Permanently delete ${v.name}? This removes their account entirely. This cannot be undone.`}
+                          className="text-red-500 hover:bg-red-50 hover:text-red-700"
+                        >
+                          Delete
+                        </ConfirmSubmitButton>
+                      </form>
+                    </div>
                   </Td>
                 </Tr>
               ))}

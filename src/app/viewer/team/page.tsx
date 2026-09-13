@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Select, Input, Label } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "@/components/ui/Table";
+import { DownloadPdfButton } from "@/components/ui/DownloadPdfButton";
 
 export default async function ViewerTeamPage({
   searchParams,
@@ -105,6 +106,37 @@ export default async function ViewerTeamPage({
 
       {selectedTeam && (
         <>
+          <div className="mb-4 flex justify-end">
+            <DownloadPdfButton
+              filename={`${selectedTeam.name.replace(/\s+/g, "-")}-team-report-${from}-to-${to}`}
+              title={`Team Report — ${selectedTeam.name}`}
+              meta={[`Range: ${formatDate(from)} – ${formatDate(to)}`, `Members: ${members.length}`]}
+              stats={[
+                { label: "Members", value: members.length },
+                { label: "Attendance", value: `${attendancePct}%` },
+                { label: "Approved logs", value: worklogs.length },
+                { label: "Milestones", value: milestoneCount },
+              ]}
+              sections={[
+                {
+                  heading: "Day-wise Attendance",
+                  columns: ["Date", "Present"],
+                  rows: dayRows.map(([date, v]) => [formatDate(date), `${v.present}/${v.total}`]),
+                },
+                {
+                  heading: "Approved Work Logs",
+                  columns: ["Date", "Intern", "Description", "Milestone"],
+                  rows: worklogs.map((w: any) => [
+                    formatDate(w.date),
+                    w.profiles?.name ?? "—",
+                    w.description,
+                    w.is_milestone ? "Yes" : "",
+                  ]),
+                },
+              ]}
+            />
+          </div>
+
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
             <StatCard label="Team members" value={members.length} />
             <StatCard label="Attendance in range" value={`${attendancePct}%`} />

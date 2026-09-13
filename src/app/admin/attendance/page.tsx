@@ -20,7 +20,7 @@ export default async function AdminAttendancePage({
   const supabase = await createClient();
 
   const [{ data: interns }, { data: attendance }] = await Promise.all([
-    supabase.from("profiles").select("id, name, team_id, teams(name)").eq("role", "intern").eq("status", "active").order("name"),
+    supabase.from("profiles").select("id, name, team_id, teams!team_id(name)").eq("role", "intern").eq("status", "active").order("name"),
     supabase.from("attendance").select("*").eq("date", date),
   ]);
 

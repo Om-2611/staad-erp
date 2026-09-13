@@ -189,6 +189,37 @@ export async function setAccountStatus(formData: FormData) {
   revalidatePath("/admin/viewers");
 }
 
+/**
+ * Permanently deletes an intern or viewer account — the auth user, their
+ * profile row, and (via FK cascade) every attendance record, work log, and
+ * viewer-team-access row they own. Unlike deactivating, this cannot be
+ * undone, so the UI confirms with the admin before ever submitting this.
+ * Refuses to delete admin accounts (those aren't exposed to this action from
+ * the UI at all, but the guard stays here too for defense in depth).
+ */
+export async function deleteAccount(formData: FormData) {
+  const actor = await requireRole("admin");
+  const userId = String(formData.get("user_id") ?? "");
+  const redirectPath = String(formData.get("redirect_path") ?? "/admin/interns");
+
+  if (!userId) fail(redirectPath, "No account specified.");
+  if (userId === actor.id) fail(redirectPath, "You can't delete your own account.");
+
+  const admin = createAdminClient();
+
+  const { data: target } = await admin.from("profiles").select("role, name").eq("id", userId).single();
+  if (!target) fail(redirectPath, "Account not found — it may already be deleted.");
+  if (target.role === "admin") fail(redirectPath, "Admin accounts can't be deleted from here.");
+
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error) fail(redirectPath, `Could not delete ${target.name}: ${error.message}`);
+
+  revalidatePath("/admin/interns");
+  revalidatePath("/admin/viewers");
+  revalidatePath("/admin/teams");
+  revalidatePath("/admin/dashboard");
+}
+
 // ----------------------------------------------------------------------------
 // Teams
 // ----------------------------------------------------------------------------

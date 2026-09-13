@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Select, Input, Label } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/Table";
+import { DownloadPdfButton } from "@/components/ui/DownloadPdfButton";
 
 export default async function ViewerMilestonesPage({
   searchParams,
@@ -56,6 +57,10 @@ export default async function ViewerMilestonesPage({
     weeks.get(key)!.items.push(log);
   }
   const sortedWeeks = Array.from(weeks.entries()).sort((a, b) => (a[0] < b[0] ? 1 : -1));
+  const milestoneCount = logs.filter((l) => l.is_milestone).length;
+  const selectedTeamName = params.team
+    ? (teams ?? []).find((t) => t.id === params.team)?.name ?? "Selected team"
+    : "All teams (in scope)";
 
   return (
     <div>
@@ -85,6 +90,31 @@ export default async function ViewerMilestonesPage({
           Apply
         </Button>
       </form>
+
+      <div className="mb-4 flex justify-end">
+        <DownloadPdfButton
+          filename={`milestones-${from}-to-${to}`}
+          title="Weekly Milestones Report"
+          meta={[`Scope: ${selectedTeamName}`, `Range: ${formatDate(from)} – ${formatDate(to)}`]}
+          stats={[
+            { label: "Approved items", value: logs.length },
+            { label: "Milestones", value: milestoneCount },
+            { label: "Weeks covered", value: sortedWeeks.length },
+          ]}
+          sections={sortedWeeks.map(([, week]) => ({
+            heading: `Week of ${week.label}`,
+            columns: ["Date", "Intern", "Team", "Description", "Milestone"],
+            rows: week.items.map((log: any) => [
+              formatDate(log.date),
+              log.profiles?.name ?? "—",
+              log.teams?.name ?? "—",
+              log.description,
+              log.is_milestone ? "Yes" : "",
+            ]),
+          }))}
+          disabled={sortedWeeks.length === 0}
+        />
+      </div>
 
       <div className="space-y-6">
         {sortedWeeks.map(([key, week]) => (

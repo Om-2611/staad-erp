@@ -8,6 +8,7 @@ import { StatusBadge, Badge } from "@/components/ui/Badge";
 import { Select, Input, Label } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "@/components/ui/Table";
+import { DownloadPdfButton } from "@/components/ui/DownloadPdfButton";
 
 export default async function ViewerIndividualPage({
   searchParams,
@@ -24,7 +25,7 @@ export default async function ViewerIndividualPage({
 
   const internBaseQuery = supabase
     .from("profiles")
-    .select("id, name, email, teams(name)")
+    .select("id, name, email, teams!team_id(name)")
     .eq("role", "intern")
     .order("name");
   const { data: internsRaw } = teamIds
@@ -95,6 +96,34 @@ export default async function ViewerIndividualPage({
 
       {selected && (
         <>
+          <div className="mb-4 flex justify-end">
+            <DownloadPdfButton
+              filename={`${selected.name.replace(/\s+/g, "-")}-report-${from}-to-${to}`}
+              title={`Individual Report — ${selected.name}`}
+              meta={[
+                `Team: ${selected.teams?.name ?? "Unassigned"}`,
+                `Range: ${formatDate(from)} – ${formatDate(to)}`,
+              ]}
+              stats={[
+                { label: "Attendance", value: `${attendancePct}%` },
+                { label: "Approved logs", value: worklogs.length },
+                { label: "Time logged", value: minutesToLabel(totalMinutes) },
+              ]}
+              sections={[
+                {
+                  heading: "Attendance",
+                  columns: ["Date", "Status"],
+                  rows: attendance.map((a) => [formatDate(a.date), a.status]),
+                },
+                {
+                  heading: "Approved Work Logs",
+                  columns: ["Date", "Description", "Milestone"],
+                  rows: worklogs.map((w) => [formatDate(w.date), w.description, w.is_milestone ? "Yes" : ""]),
+                },
+              ]}
+            />
+          </div>
+
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <StatCard label="Attendance in range" value={`${attendancePct}%`} hint={`${presentDays}/${attendance.length} days present`} />
             <StatCard label="Approved work logs" value={worklogs.length} />

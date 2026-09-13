@@ -28,7 +28,7 @@ export default async function AdminTeamsPage({
 
   const { data: teams } = await supabase
     .from("teams")
-    .select("*, profiles(count)")
+    .select("*, profiles!team_id(count)")
     .order("name");
 
   return (

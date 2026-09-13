@@ -7,8 +7,9 @@ import { Card, CardHeader, CardTitle, CardBody } from "@/components/ui/Card";
 import { StatusBadge, Avatar, Badge } from "@/components/ui/Badge";
 import { Select, Input } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
+import { ConfirmSubmitButton } from "@/components/ui/ConfirmSubmitButton";
 import { Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "@/components/ui/Table";
-import { updateInternTeam, setAccountStatus } from "@/app/admin/actions";
+import { updateInternTeam, setAccountStatus, deleteAccount } from "@/app/admin/actions";
 import { CreateInternForm } from "@/app/admin/interns/CreateInternForm";
 
 export default async function AdminInternsPage({
@@ -23,7 +24,7 @@ export default async function AdminInternsPage({
   const [{ data: interns }, { data: teams }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("*, teams(name)")
+      .select("*, teams!team_id(name)")
       .eq("role", "intern")
       .order("joined_date", { ascending: false }),
     supabase.from("teams").select("*").order("name"),
@@ -99,13 +100,27 @@ export default async function AdminInternsPage({
                     <StatusBadge status={intern.status} />
                   </Td>
                   <Td>
-                    <form action={setAccountStatus}>
-                      <input type="hidden" name="user_id" value={intern.id} />
-                      <input type="hidden" name="status" value={intern.status === "active" ? "inactive" : "active"} />
-                      <Button type="submit" size="sm" variant={intern.status === "active" ? "danger" : "secondary"}>
-                        {intern.status === "active" ? "Deactivate" : "Reactivate"}
-                      </Button>
-                    </form>
+                    <div className="flex items-center gap-1.5">
+                      <form action={setAccountStatus}>
+                        <input type="hidden" name="user_id" value={intern.id} />
+                        <input type="hidden" name="status" value={intern.status === "active" ? "inactive" : "active"} />
+                        <Button type="submit" size="sm" variant={intern.status === "active" ? "danger" : "secondary"}>
+                          {intern.status === "active" ? "Deactivate" : "Reactivate"}
+                        </Button>
+                      </form>
+                      <form action={deleteAccount}>
+                        <input type="hidden" name="user_id" value={intern.id} />
+                        <input type="hidden" name="redirect_path" value="/admin/interns" />
+                        <ConfirmSubmitButton
+                          size="sm"
+                          variant="ghost"
+                          confirmMessage={`Permanently delete ${intern.name}? This removes their account and ALL of their attendance and work log history. This cannot be undone.`}
+                          className="text-red-500 hover:bg-red-50 hover:text-red-700"
+                        >
+                          Delete
+                        </ConfirmSubmitButton>
+                      </form>
+                    </div>
                   </Td>
                 </Tr>
               ))}
